@@ -15,7 +15,7 @@ The package can then be loaded by calling Needs["CompoundMatrixMethod`"].
 
 First we need to transform the BVP into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary. 
 
-        sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, L}]
+        sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}]
 
 This will return the matrices A, B and C that are required. We can then use the Compound Matrix Method to evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
 
