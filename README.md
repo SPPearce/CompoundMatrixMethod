@@ -1,5 +1,7 @@
 # MMA-CompoundMatrixMethod
 Solving boundary-value eigenvalue problems in Mathematica using the Compound Matrix Method
+Mathematical details on the Compound Matrix Method may be found here <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf</a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
+
 
  - [Download the latest release]
  The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica.  For example, assuming that the file `CompoundMatrixMethod-0.1.paclet` was downloaded into the directory `~/Downloads`, evaluate
