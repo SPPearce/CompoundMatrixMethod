@@ -1,8 +1,8 @@
 # MMA-CompoundMatrixMethod
 Solving boundary-value eigenvalue problems in Mathematica using the Compound Matrix Method
 
- - [Download the latest release](https://github.com/krazug/CompoundMatrixMethod/releases), 
- The initial version  is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica.  For example, assuming that the file `CompoundMatrixMethod-0.1.paclet` was downloaded into the directory `~/Downloads`, evaluate
+ - [Download the latest release]
+ The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica.  For example, assuming that the file `CompoundMatrixMethod-0.1.paclet` was downloaded into the directory `~/Downloads`, evaluate
 
         Needs["PacletManager`"]
         PacletInstall["~/Downloads/CompoundMatrixMethod-0.1.paclet"]
