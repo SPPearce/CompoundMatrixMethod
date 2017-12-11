@@ -1,6 +1,6 @@
 # MMA-CompoundMatrixMethod
 Solving boundary-value eigenvalue problems in Mathematica using the Compound Matrix Method
-Mathematical details on the Compound Matrix Method may be found here <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf</a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
+Mathematical details on the Compound Matrix Method may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf>here </a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
 
 
  - [Download the latest release]
