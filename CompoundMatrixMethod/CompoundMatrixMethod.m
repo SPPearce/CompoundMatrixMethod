@@ -5,7 +5,7 @@
 (* :Title: CompoundMatrixMethod *)
 (* :Author: Simon Pearce <simon.pearce@manchester.ac.uk> *)
 (* :Context: CompoundMatrixMethod` *)
-(* :Version: 0.2 *)
+(* :Version: 0.3 *)
 (* :Date: 2017-12-07 *)
 
 (* :Mathematica Version: 9+ *)
@@ -42,6 +42,14 @@ ToLinearMatrixForm::inhomogeneous = "Inhomogeneous equation, does not work with 
 ToLinearMatrixForm::linearised = "Original Equation not linear, linearized equation given by `1`";
 ToLinearMatrixForm::noLimits = "Please supply limits for the independent variable when providing boundary conditions";
 
+SelectPositiveEigenvectors::usage = "\
+SelectPositiveEigenvectors[matrix, x] selects the eigenvectors which correspond to negative real part as x->-inf"
+
+SelectNegativeEigenvectors::usage = "\
+SelectNegativeEigenvectors[matrix] selects the eigenvectors which correspond to positive real part at  x->inf"
+
+SelectPositiveEigenvectors::nonNumericalMatrix = "Matrix `1` is not numerical"
+SelectNegativeEigenvectors::nonNumericalMatrix = "Matrix `1` is not numerical"
 
 Begin["`Private`"]; (* Begin Private Context *)
 
@@ -49,22 +57,22 @@ Begin["`Private`"]; (* Begin Private Context *)
 reprules = \[FormalPhi][a_List] :> Signature[a] \[FormalPhi][Sort[a]];
 
 (* Generation of the derivatives of the matrix minors, looping over  rule to sort the lists of indices *)
-minorsDerivs[list_?VectorQ, len_] := minorsDerivs[list, len] =
+minorsDerivs[list_?VectorQ, len_?NumericQ] := minorsDerivs[list, len] =
     Sum[
 	      Sum[\[FormalCapitalA][y, z] \[FormalPhi][list /. y -> z], {z, Union[Complement[Range[len], list], {y}]}],
 	    {y, list}] /. reprules
 
-qMatrix[len_?EvenQ, len2_] := qMatrix[len, len2] =
+qMatrix[len_?NumericQ, len2_?NumericQ] := qMatrix[len, len2] =
     Module[{minorsTab},
   minorsTab = Table[minorsDerivs[ii, len], {ii, Subsets[Range[len], {len2}]}]
 		  /. Thread[Subsets[Range[len], {len2}] -> Range[Length[Subsets[Range[len], {len2}]]]];
   Transpose[Table[Coefficient[minorsTab, \[FormalPhi][i]], {i, 1, Binomial[len, len2]}]]
 ]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, leftBCMatrix_, rightBCMatrix_, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}, dampfactor_ : 1] :=
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, 0}, {rightBCMatrix, 0}, {x, xa, xb, xm}]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}, dampfactor_ : 1] :=
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, leftBCVector}, {rightBCMatrix, rightBCVector}, {x, xa, xb, xm}]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_, rightBCMatrix_, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}, dampfactor_ : 1] :=
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, 0}, {rightBCMatrix, 0}, {x, xa, xb, xm}]
 
 CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}] := Module[
@@ -174,7 +182,9 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_, xa_, xb_}] :=
 
 			(* If no derivatives exist, then that variable is undifferentiated and need to catch it. 
 				 Else put all but the highest derivative into *)
-			If[Length[allVariablesInd[i]] == 1, AppendTo[undifferentiatedVariables, allVariablesInd[i][[1]]], originalYVariablesInd[i] = Most@allVariablesInd[i]],
+			If[Length[allVariablesInd[i]] == 1,
+				AppendTo[undifferentiatedVariables, allVariablesInd[i][[1]]];originalYVariablesInd[i] = {},
+				originalYVariablesInd[i] = Most@allVariablesInd[i]],
 
 			{i, nDepVars}];
 
@@ -210,7 +220,7 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_, xa_, xb_}] :=
  
 	
 	(* Find the right hand side of Y' = A Y + F*)
-  YDerivativeVector = D[originalYVariables /. newYSubs, x] /. sol[[1]];
+	YDerivativeVector =	D[originalYVariables /. newYSubs, x] /.sol[[1]];
 	AMatrix = Coefficient[#, newYs]& /@ YDerivativeVector;
 	FVector = YDerivativeVector /. Thread[newYs -> 0];
 
@@ -237,7 +247,19 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_, xa_, xb_}] :=
   {AMatrix, {leftBCMatrix, leftBCVector}, {rightBCMatrix, rightBCVector}, {x, xa, xb}}
 ]
 
+SelectNegativeEigenvectors[mat_?MatrixQ, x_ /; !NumericQ[x]] := Module[{limitMatrix},
 
+		limitMatrix = Limit[mat, x -> -\[Infinity]];
+		If[!MatrixQ[limitMatrix, NumericQ], Message[SelectNegativeEigenvectors::nonNumericalMatrix,limitMatrix];Return[$Failed]];
+		Extract[#[[2]], Position[#[[1]], a_ /; Re[a] < 0, 1]] &@	Eigensystem[limitMatrix]
+
+	]
+
+SelectPositiveEigenvectors[mat_?MatrixQ, x_ /; !NumericQ[x]] := Module[{limitMatrix},
+		limitMatrix=Limit[mat, x -> \[Infinity]];
+		If[!MatrixQ[limitMatrix, NumericQ], Message[SelectNegativeEigenvectors::nonNumericalMatrix,limitMatrix];Return[$Failed]];
+		Extract[#[[2]], Position[#[[1]], a_ /; Re[a] > 0, 1]] &@	Eigensystem[limitMatrix]
+	]
 
 End[]; (* End Private Context *)
 
