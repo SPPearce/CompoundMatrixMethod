@@ -38,3 +38,11 @@ The function is smooth and can be plotted by the built-in routines:
     Plot[CompoundMatrixMethod[{k, k0}, sys], {k0, 0, 15}]
    
 A further six examples are shown in the file `CMMExamples.nb`.
+
+## Citations
+
+I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also available on the arXiv). I'm currently working on an expository paper to detail how the method works and introduce the package.
+
+## Contact
+
+Feel free to contact me if you have any questions, suggestions or problems. My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk. 
