@@ -5,11 +5,11 @@
 (* :Title: CompoundMatrixMethod *)
 (* :Author: Simon Pearce <simon.pearce@manchester.ac.uk> *)
 (* :Context: CompoundMatrixMethod` *)
-(* :Version: 0.3 *)
-(* :Date: 2017-12-07 *)
+(* :Version: 0.4 *)
+(* :Date: 2018-03-09 *)
 
 (* :Mathematica Version: 9+ *)
-(* :Copyright: (c) 2017 Simon Pearce *)
+(* :Copyright: (c) 2017-18 Simon Pearce *)
 
 BeginPackage["CompoundMatrixMethod`"];
 
@@ -32,7 +32,11 @@ CompoundMatrixMethod::boundaryConditionRank = "The rank of the boundary conditio
 CompoundMatrixMethod::nonZeroBoundaryConditions = "Non-zero boundary condition given, "
 
 CompoundMatrixMethod::nonNumericalMatrix = "Matrix `1` is not numerical at x = `2` "
-CompoundMatrixMethod::noEigenvalue = "Matrix `1` does not contain the potential eigenvalue `2` "
+CompoundMatrixMethod::noEigenvalue = "Warning: Matrix `1` does not contain the potential eigenvalue `2` "
+
+CompoundMatrixMethod::incorrectRange = "Range of integration, [`1` `2`] is not numerical with `1`<`2`"
+
+CompoundMatrixMethod::matchPointIncorrect = "Range of integration, [`1` `2`] does not include the matching point `3`"
 
 
 ToLinearMatrixForm::somethingWrong = "Something has gone wrong!";
@@ -68,29 +72,41 @@ qMatrix[len_?NumericQ, len2_?NumericQ] := qMatrix[len, len2] =
 		  /. Thread[Subsets[Range[len], {len2}] -> Range[Length[Subsets[Range[len], {len2}]]]];
   Transpose[Table[Coefficient[minorsTab, \[FormalPhi][i]], {i, 1, Binomial[len, len2]}]]
 ]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}] :=
+
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_, xb_, xm_ : False}}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, 0}, {rightBCMatrix, 0}, {x, xa, xb, xm}]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}}] :=
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_, xb_, xm_ : False}}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, leftBCVector}, {rightBCMatrix, rightBCVector}, {x, xa, xb, xm}]
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}] :=
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_, xb_, xm_ : False}] :=
     CompoundMatrixMethod[{\[FormalLambda], \[FormalLambda]0}, AMatrix, {leftBCMatrix, 0}, {rightBCMatrix, 0}, {x, xa, xb, xm}]
 
-CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xa_?NumericQ, xb_?NumericQ, xm_ : False}] := Module[
+CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, {leftBCMatrix_?MatrixQ, leftBCVector_}, {rightBCMatrix_?MatrixQ, rightBCVector_}, {x_ /; !NumericQ[x], xaa_, xbb_, xm_ : False}] := Module[
   {len, subsets, newYs, leftYICs, rightYICs, phiLeftVector, phiRightVector, LeftBCSolution, RightBCSolution, yLeft, yRight,
 	  phiLeft, phiRight, LeftPositiveEigenvalues, RightNegativeEigenvalues, phiLeftICs, phiRightICs, QQ, solutionFromRight,
-	  solutionFromLeft, det, matchPoint,lenLeft,lenRight,subsetsLeft,subsetsRight,QLeft,QRight},
-  If[(xa <= xm <= xb && NumericQ[xm]), matchPoint = xm, matchPoint = (xb + xa) / 2];
+	  solutionFromLeft, det, matchPoint,lenLeft,lenRight,subsetsLeft,subsetsRight,QLeft,QRight,xa,xb},
 
-  (* Check some conditions are true, square matrix with full rank and homogeneous BCs*)
+	If[!NumericQ[xaa], xa = (xaa /. \[FormalLambda] -> \[FormalLambda]0), xa = xaa];
+	If[!NumericQ[xbb], xb = (xbb /. \[FormalLambda] -> \[FormalLambda]0), xb = xbb];
+
+	If[!( xa < xb ),Message[CompoundMatrixMethod::incorrectRange,xa,xb];Return[$Failed]];
+
+	If[NumericQ[xm /. \[FormalLambda] -> \[FormalLambda]0], matchPoint = xm /. \[FormalLambda] -> \[FormalLambda]0, matchPoint = (xb + xa) / 2];
+  
+  If[!(xa <= matchPoint <= xb), Message[CompoundMatrixMethod::matchPointIncorrect, xa, xb, matchPoint]; Return[$Failed]];
+
+(* Check some conditions are true, square matrix with full rank and homogeneous BCs*)
   If[Length[AMatrix] != Length[Transpose[AMatrix]], Message[CompoundMatrixMethod::nonSquareMatrix];Return[$Failed]];
-  If[Length[AMatrix] != MatrixRank[AMatrix], Message[CompoundMatrixMethod::matrixRank];Return[$Failed]];
+
+	(* Actually, don't necessarily need full rank, try without.
+	If[Length[AMatrix] != MatrixRank[AMatrix], Message[CompoundMatrixMethod::matrixRank];Return[$Failed]]; *)
+
   (* Check the equations are inhomogeneous *)
   If[Max@Abs@leftBCVector != 0 || Max@Abs@rightBCVector != 0, Message[CompoundMatrixMethod::nonZeroBoundaryConditions];Return[$Failed]];
 
-  (* Check that the eigenvalue appears in the matrix A *)
-  If[MatrixQ[AMatrix, FreeQ[#, \[FormalLambda]] &],Message[CompoundMatrixMethod::noEigenvalue,AMatrix,\[FormalLambda]];Return[$Failed]];
+  (* Check that the eigenvalue appears in the matrix A, give warning otherwise*)
+  If[MatrixQ[AMatrix, FreeQ[#, \[FormalLambda]] &],Message[CompoundMatrixMethod::noEigenvalue,AMatrix,\[FormalLambda]]];
 
-  (* Check that the matrix components are numerical, at least at the endpoints *)
+(* Check that the matrix components are numerical, at least at the endpoints *)
   If[!MatrixQ[AMatrix /. \[FormalLambda] -> \[FormalLambda]0 /. x -> xa, NumericQ],Message[CompoundMatrixMethod::nonNumericalMatrix,AMatrix,xa];Return[$Failed]];
   If[!MatrixQ[AMatrix /. \[FormalLambda] -> \[FormalLambda]0 /. x -> xb, NumericQ],Message[CompoundMatrixMethod::nonNumericalMatrix,AMatrix,xb];Return[$Failed]];
 
@@ -99,14 +115,14 @@ CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLa
 
   (* Initial conditions for shooting from the LHS *)
   LeftBCSolution = Quiet@Solve[leftBCMatrix.newYs == leftBCVector, newYs];
-	leftYICs = NullSpace[leftBCMatrix /. x -> xa];
+	leftYICs = NullSpace[leftBCMatrix /. x -> xa, Method -> "DivisionFreeRowReduction"];
   lenLeft = Length[leftYICs];
   subsetsLeft = Subsets[Range[len], {lenLeft}];
 
 
   (* Initial conditions for shooting from the RHS *)
   RightBCSolution = Quiet@Solve[rightBCMatrix.newYs == rightBCVector, newYs];
-	rightYICs = NullSpace[rightBCMatrix /. x -> xb];
+	rightYICs = NullSpace[rightBCMatrix /. x -> xb, Method -> "DivisionFreeRowReduction"];
   lenRight = Length[rightYICs];
   subsetsRight = Subsets[Range[len], {lenRight}];
 
@@ -128,9 +144,6 @@ CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLa
   phiLeft = (Det[(yLeft /. x -> xa /. \[FormalLambda] -> \[FormalLambda]0)[[#]]]& /@ subsetsLeft);
   phiRight = (Det[(yRight /. x -> xb /. \[FormalLambda] -> \[FormalLambda]0)[[#]]]& /@ subsetsRight);
 
-
-
-
   (* Find the exponentially growing modes from each side, positive or negative eigenvalues depending on which side *)
 
   LeftPositiveEigenvalues = Select[Eigenvalues[AMatrix /. x -> xa /. \[FormalLambda] -> \[FormalLambda]0], Re[#] > 0&];
@@ -149,8 +162,8 @@ CompoundMatrixMethod[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLa
 
   (* Solve for integrating from the left and right *)
  
-  solutionFromLeft = NDSolve[{Thread[D[phiLeftVector, x] == (QLeft - Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs}, Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xb}][[1]];
-  solutionFromRight = NDSolve[{Thread[D[phiRightVector, x] == (QRight - Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs}, Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xa, xb}][[1]];
+  solutionFromLeft = NDSolve[{Thread[D[phiLeftVector, x] == (QLeft - Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs}, Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xb}, MaxStepFraction->0.01][[1]];
+  solutionFromRight = NDSolve[{Thread[D[phiRightVector, x] == (QRight - Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs}, Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xa, xb},MaxStepFraction->0.01][[1]];
 
   (* Laplace Expanded Derivative of the determinant*)
 
