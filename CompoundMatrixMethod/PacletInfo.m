@@ -3,7 +3,7 @@
 (* ::Input::Initialization:: *)
 Paclet[
 Name->"CompoundMatrixMethod",
-Version->"0.4",
+Version->"0.5",
 MathematicaVersion->"9+",
 Description->"Solve Eigenvalue Boundary Value Problems using the Compound Matrix Method.",
 Creator->"Simon Pearce",
