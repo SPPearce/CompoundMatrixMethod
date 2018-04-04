@@ -7,9 +7,9 @@ Mathematical details on the Compound Matrix Method may be found <a href=http://w
  The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica:  
  
         Needs["PacletManager`"]
-        PacletInstall["https://github.com/SPPearce/CompoundMatrixMethod/releases/download/v0.4/CompoundMatrixMethod-0.4.paclet"]
+        PacletInstall["https://github.com/SPPearce/CompoundMatrixMethod/releases/download/v0.5/CompoundMatrixMethod-0.5.paclet"]
         
- Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.4.paclet"]`
+ Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.5.paclet"]`
 
 The package can then be loaded by calling 
 
@@ -37,7 +37,7 @@ The function is smooth and can be plotted by the built-in routines:
     
     Plot[CompoundMatrixMethod[{k, k0}, sys], {k0, 0, 15}]
    
-A further six examples are shown in the file `CMMExamples.nb`.
+A further nine examples are shown in the file `CMMExamples.nb`.
 
 ## Citations
 
