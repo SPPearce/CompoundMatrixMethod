@@ -1,14 +1,14 @@
 # MMA-CompoundMatrixMethod
 Solving boundary-value eigenvalue problems in Mathematica using the Compound Matrix Method to construct the Evans function.
 
-Mathematical details on the Compound Matrix Method may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf>here </a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
+Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf>here </a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
 
 
 ## How to Download the latest release
- The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica:  
+ The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica:
  
         Needs["PacletManager`"]
-        PacletInstall["https://github.com/SPPearce/CompoundMatrixMethod/releases/download/v0.7/CompoundMatrixMethod-0.7.paclet"]
+        PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/PacletServer/master"]
         
  Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.7.paclet"]`
 
@@ -18,13 +18,13 @@ The package can then be loaded by calling
 
 ## Usage
 
-The Compound Matrix Method is a package for finding eigenvalues to boundary-value differential equations with an unknown parameter.
+The Compound Matrix Method is a package for finding eigenvalues of boundary-value ordinary differential equations.
 
-First we need to transform the BVP into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary. 
+First we need to transform the BVP into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary (with a warning if it does). 
 
         sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}]
 
-This will return the matrices A, B and C that are required. We can then use the Compound Matrix Method to evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
+This will store the system into the variable `sys`. We can then evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
 
         Evans[{k,1},sys]
         -0.841471
@@ -46,4 +46,6 @@ I used this method to solve an eigenvalue problem in <a href=https://doi.org//10
 
 ## Contact
 
-Feel free to contact me if you have any questions, suggestions or problems. My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk. 
+Feel free to contact me if you have any questions, suggestions or issues.
+I'm also interested in collaborations involving this work.
+My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk. 
