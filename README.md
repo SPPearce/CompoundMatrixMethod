@@ -49,3 +49,7 @@ I used this method to solve an eigenvalue problem in <a href=https://doi.org//10
 Feel free to contact me if you have any questions, suggestions or issues.
 I'm also interested in collaborations involving this work.
 My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk. 
+
+## Funding Acknowledgement
+
+This code was initially written while I held an Early Career Fellowship from the <a href=https://www.leverhulme.ac.uk>Leverhulme Trust</a>.
