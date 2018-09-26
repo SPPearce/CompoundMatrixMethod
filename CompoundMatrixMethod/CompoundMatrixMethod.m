@@ -5,10 +5,10 @@
 (* :Title: CompoundMatrixMethod *)
 (* :Author: Simon Pearce <simon.pearce@manchester.ac.uk> *)
 (* :Context: CompoundMatrixMethod` *)
-(* :Version: 0.7 *)
-(* :Date: 2018-05-14 *)
+(* :Version: 0.9 *)
+(* :Date: 2018-09-26 *)
 
-(* :Mathematica Version: 9+ *)
+(* :Mathematica Version: 10+ *)
 (* :Copyright: (c) 2017-18 Simon Pearce *)
 
 BeginPackage["CompoundMatrixMethod`"];
@@ -16,17 +16,17 @@ BeginPackage["CompoundMatrixMethod`"];
 Unprotect["CompoundMatrixMethod`*"];
 
 Evans::usage = "\
-Evans[{k,k0},sys] evaluates the Evans function from the Compound Matrix Method with potential eigenvalue k=k0, for the system defined from ToLinearMatrixForm.
-Evans[{k,k0},A,B,C,{x,x0,x1}] evaluates the Evans function from the Compound Matrix Method with k=k0. Here the linear matrix ODE is given by dy/dx=A.y, with B.y=0 at x=x0 and C.y=0 at x=x1.
+Evans[k,sys] evaluates the Evans function from the Compound Matrix Method with potential eigenvalue k, for the system defined from ToMatrixSystem.
+Evans[k,A,B,C,{x,x0,x1}] evaluates the Evans function from the Compound Matrix Method with k. Here the linear matrix ODE is given by dy/dx=A.y, with B.y=0 at x=x0 and C.y=0 at x=x1.
 For either case a complex number is returned, zeroes of this function correspond to zeroes of the original eigenvalue equation.
-Evans[{k,k0},{A1,A2},B,C,{F,G},{x,x0,xmatch,x1}] evaluates the Evans function for potential eigenvalue k=k0 for an interface problem.
+Evans[k,{A1,A2},B,C,{F,G},{x,x0,xmatch,x1}] evaluates the Evans function for potential eigenvalue k for an interface problem.
 Here there are two linear matrix ODE is given on the left by dy/dx=A1.y, B.y=0 at x=x0, dz/dx=A2.z, and C.z=0 at x=x1, and the interface conditions are given by
 F.y + G.z = 0 at the interface given by x=xmatch.";
 
-ToLinearMatrixForm::usage = "\
-ToLinearMatrixForm[eqn,{},depvars,x] takes a list of differential equations in the dependent variables depvars and independent variable x and puts the equations into linear matrix form dy/dx = A.y
-ToLinearMatrixForm[eqn,bcs,depvars,{x,x0,x1}] also includes the boundary conditions evaluated at x=x0 and x=x1.
-ToLinearMatrixForm[{eqns1,eqns2},{bcs,interfaceEqns},depvars,{x,x0,xmatch,x1}] sets up the function with an interface at x=xmatch, with eqns1 in x0<x<xmatch and eqns2 in xmatch<x<x1.";
+ToMatrixSystem::usage = "\
+ToMatrixSystem[eqn,{},depvars,x] takes a list of differential equations in the dependent variables depvars and independent variable x and puts the equations into linear matrix form dy/dx = A.y
+ToMatrixSystem[eqn,bcs,depvars,{x,x0,x1}] also includes the boundary conditions evaluated at x=x0 and x=x1.
+ToMatrixSystem[{eqns1,eqns2},{bcs,interfaceEqns},depvars,{x,x0,xmatch,x1}] sets up the function with an interface at x=xmatch, with eqns1 in x0<x<xmatch and eqns2 in xmatch<x<x1.";
 
 Evans::boundarySolutionFailed = "Applying the boundary conditions at `1` failed, perhaps you don't have any conditions there.";
 Evans::nonSquareMatrix = "The matrix A is not square.";
@@ -48,14 +48,14 @@ Evans::InterfaceTooBig = "Interface problems are only currently supported up to 
 
 Evans::normalizationConstants = "Normalization constants must be a list of two elements.";
 
-ToLinearMatrixForm::somethingWrong = "Something has gone wrong!";
+ToMatrixSystem::somethingWrong = "Something has gone wrong!";
 
-ToLinearMatrixForm::matrixOnly = "Incorrect number of boundary conditions given (`1` compared to matrix dimension `2`), returning the matrix only";
-ToLinearMatrixForm::inhomogeneous = "Inhomogeneous equation, does not work with the Compound Matrix Method";
-ToLinearMatrixForm::inhomogeneousBCs = "Boundary values are inhomogeneous, does not work with the Compound Matrix Method (returning vectors as well as matrices) `1` `2`";
+ToMatrixSystem::matrixOnly = "Incorrect number of boundary conditions given (`1` compared to matrix dimension `2`), returning the matrix only";
+ToMatrixSystem::inhomogeneous = "Inhomogeneous equation, does not work with the Compound Matrix Method";
+ToMatrixSystem::inhomogeneousBCs = "Boundary values are inhomogeneous, does not work with the Compound Matrix Method (returning vectors as well as matrices) `1` `2`";
 
-ToLinearMatrixForm::linearised = "Original Equation not linear, linearized equation given by `1`";
-ToLinearMatrixForm::noLimits = "Please supply limits for the independent variable when providing boundary conditions";
+ToMatrixSystem::linearised = "Original Equation not linear, linearized equation given by `1`";
+ToMatrixSystem::noLimits = "Please supply limits for the independent variable when providing boundary conditions";
 
 SelectPositiveEigenvectors::usage = "\
 SelectPositiveEigenvectors[matrix, x] selects the eigenvectors which correspond to negative real part as x->-inf";
@@ -69,13 +69,56 @@ SelectNegativeEigenvectors::nonNumericalMatrix = "Matrix `1` is not numerical";
 SelectPositiveEigenvectors::noPositiveEigenvectors = "No positive Eigenvectors found";
 SelectNegativeEigenvectors::noNegativeEigenvectors = "No negative Eigenvectors found";
 
-CompoundMatrixMethod::usage = "Alternative alias for Evans";
-NormalizationConstants::usage = "Normalization constants for the Evans function, for the integration from left and right respectively. Usual settings are either 0 or 1 for both.";
+WindingNumber::noPointsGiven = "No contour points given to calculate the winding number from.";
+
+
+CompoundMatrixMethod::usage = "Alternative alias for the Evans function";
+NormalizationConstants::usage = "Normalization constants for the Evans function, for the integration from left and right respectively.
+Setting to zero applies no scaling, setting to 1 removes the exponential growth given by the sum of the positive or negative eigenvalues respectively.";
+
+WindingNumber::usage="\
+WindingNumber[pts] calculates the Winding Number of the set of points which make a closed contour in the complex plane, around the origin.
+WindingNumber[pts,{x0,y0}] calculates the Winding Number around centre {x0,y0}.";
+
+WindingNumberCircle::usage="\
+WindingNumberCircle[k,sys,r,inc] evaluates the Evans function Winding Number for the circular contour of radius r for a system defined from ToMatrixSystem with potential eigenvalue k.
+	The default value for inc is 50. This should correspond to the number of eigenvalues within the contour.
+WindingNumberCircle[k,sys,r,inc,{x0,y0}] evaluates the contour around {x0,y0}.";
+
+WindingNumberSemiCircle::usage="\
+WindingNumberSemiCircle[k,sys,r,inc] evaluates the Evans function Winding Number for the semicircular contour in the positive complex plane (including the axis)
+with radius r, for a system defined from ToMatrixSystem with potential eigenvalue k. This winding number corresponds to the number of eigenvalues within the contour.
+	The value inc determines how many points to calculate on the contour, with the default being 50. ";
+
+PlotEvansBoth::usage="Generate two plots, showing both the original contour for k as well as the contour of the Evans function D(k).";
+PlotEvansCircle::usage="\
+PlotEvansCircle[k, sys,	r, inc] generates a contour of radius r (and spacing inc) in the complex plane,
+calculates the Evans function around this contour and plots the two contours along with the Winding Number.
+PlotEvansCircle[k, sys,	r, inc,{x0,y0}] centres the contour at {x0,y0}.";
+
+
+PlotEvansSemiCircle::usage="PlotEvansSemiCircle[k, sys,	r, inc] generates a semi-circular contour of radius r (split into ~ninc points) in the complex plane (including the imaginary axis),
+calculates the Evans function around this contour and plots the two contours along with the Winding Number.";
+
+PositiveSemiCircleContour::usage="\
+PositiveSemiCircleContour[r, inc] generates a semicircular contour in the positive complex plane (including the axis) with radius r, with the contour split into approximately inc (default 50) points.";
+
+CircleContour::usage="\
+CircleContour[r, inc] generates a contour in the complex plane with radius r, with the contour split into inc (default 50) points.
+CircleContour[r, inc, {x0,y0}] centres the contour at {x0,y0}";
+
+nPoints::usage="Number of points to use in the discretization of the contour";
+ContourCenter::usage="Center of the circular contour";
+ContourRadius::usage="Radius of the contour";
+
+reIm::usage="convert a complex number into a list with real and imaginary parts "
+
 
 Begin["`Private`"]; (* Begin Private Context *)
 
-(* Initially used CompoundMatrixMethod as the function name, so this is for backward compatibility. *)
+(* Initially used CompoundMatrixMethod and ToLinearMatrixForm as the function names, so this is for backward compatibility. *)
 CompoundMatrixMethod = Evans;
+ToLinearMatrixForm = ToMatrixSystem;
 
 (* Replacement rule to sort the lists of indices *)
 reprules = \[FormalPhi][a_?ListQ] :> Signature[a] \[FormalPhi][Sort[a]];
@@ -108,30 +151,37 @@ rulesFG[len_?NumericQ] := rulesFG[len] = {\[FormalPhi]\[FormalPhi]L[{l_}][x_] :>
 	\[FormalPhi]\[FormalPhi]R[{l_, m_, n_, o_, p_}][x_] :>	Sum[G[l, a] G[m, b] G[n, c] G[o, d] G[p, e]
 		\[FormalPhi]R[{a, b, c, d, e}][x], {a, 1, len}, {b, 1, len}, {c, 1, len}, {d, 1, len}, {e, 1, len}]};
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {}, rightBCMatrix_?MatrixQ, {x_ /; ! NumericQ[x], xa_, xb_,	xm_ : False}},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0},	AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], rightBCMatrix, {x, xa, xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, {}, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0}, AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x],
+Options[Evans]={NormalizationConstants -> 1, MaxStepFraction->0.01};
+
+(* Wrapper for older versions, to replace the eigenvalue with FormalLambda. *)
+Evans[{x_/;!NumericQ[x],\[FormalLambda]0_?NumericQ},b___]:=Evans[\[FormalLambda]0,ReleaseHold[Hold[b]/.x->\[FormalLambda]]]
+
+
+Evans[\[FormalLambda]0_?NumericQ, {AMatrix_?MatrixQ, {}, rightBCMatrix_?MatrixQ, {x_ /; ! NumericQ[x], xa_, xb_,	xm_ : False}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0,	AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], rightBCMatrix, {x, xa, xb, xm},opts]
+
+Evans[\[FormalLambda]0_?NumericQ, {AMatrix_?MatrixQ, {}, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0, AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x],
 			N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,	xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ,	leftBCMatrix_?MatrixQ, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0},	AMatrix, leftBCMatrix, N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,	xb, xm},opts]
+Evans[\[FormalLambda]0_?NumericQ, {AMatrix_?MatrixQ,	leftBCMatrix_?MatrixQ, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0,	AMatrix, leftBCMatrix, N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,	xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ},	AMatrix_?MatrixQ, {}, rightBCMatrix_?MatrixQ, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0}, AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], rightBCMatrix, {x, xa, xb, xm},opts]
+Evans[\[FormalLambda]0_?NumericQ,	AMatrix_?MatrixQ, {}, rightBCMatrix_?MatrixQ, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0, AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], rightBCMatrix, {x, xa, xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, {}, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0},
+Evans[\[FormalLambda]0_?NumericQ, AMatrix_?MatrixQ, {}, {}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0,
 			AMatrix, N@SelectNegativeEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, {{}, {}}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0},	AMatrix, leftBCMatrix, N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,	xb, xm},opts]
+Evans[\[FormalLambda]0_?NumericQ, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, {{}, {}}, {x_ /; ! NumericQ[x], xa_, xb_, xm_ : False},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0,	AMatrix, leftBCMatrix, N@SelectPositiveEigenvectors[AMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], {x, xa,	xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-    Evans[{\[FormalLambda], \[FormalLambda]0}, AMatrix, leftBCMatrix, rightBCMatrix, {x, xa, xb, xm},opts]
+Evans[\[FormalLambda]0_?NumericQ, {AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xa_, xb_, xm_ : False}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+    Evans[\[FormalLambda]0, AMatrix, leftBCMatrix, rightBCMatrix, {x, xa, xb, xm},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ,	rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xaa_, xbb_, xm_ : False},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
+Evans[\[FormalLambda]0_?NumericQ, AMatrix_?MatrixQ, leftBCMatrix_?MatrixQ,	rightBCMatrix_?MatrixQ, {x_ /; !NumericQ[x], xaa_, xbb_, xm_ : False},opts:OptionsPattern[{Evans,NDSolve}]] :=
     Module[{len, subsets, newYs, leftYICs, rightYICs, phiLeftVector, phiRightVector, LeftBCSolution, RightBCSolution, yLeft, yRight,
 	  phiLeft, phiRight, LeftPositiveEigenvalues, RightNegativeEigenvalues, phiLeftICs, phiRightICs, QQ, solutionFromRight,
 	  solutionFromLeft, det, matchPoint,lenLeft,lenRight,subsetsLeft,subsetsRight,QLeft,QRight,xa,xb},
@@ -141,7 +191,7 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?Numeric
 
 	If[!( xa < xb ),Message[Evans::incorrectRange,xa,xb];Return[$Failed]];
 
-	If[Length[OptionValue[NormalizationConstants]]!=2,Message[Evans::normalizationConstants]; Return[$Failed]];
+	If[!(1<=Length[Flatten[{OptionValue[NormalizationConstants]}]]<=2),Message[Evans::normalizationConstants]; Return[$Failed]];
 
 	If[NumericQ[xm /. \[FormalLambda] -> \[FormalLambda]0], matchPoint = xm /. \[FormalLambda] -> \[FormalLambda]0, matchPoint = (xb + xa) / 2];
   
@@ -210,9 +260,12 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?Numeric
 
 
   (* Solve for integrating from the left and right *)
- 
-  solutionFromLeft = NDSolve[{Thread[D[phiLeftVector, x] == (QLeft -  	First[OptionValue[NormalizationConstants]] Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs}, Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xb}, MaxStepFraction->0.01][[1]];
-  solutionFromRight = NDSolve[{Thread[D[phiRightVector, x] == (QRight -  	Last[OptionValue[NormalizationConstants]] Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs}, Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xa, xb},MaxStepFraction->0.01][[1]];
+
+  solutionFromLeft = NDSolve[{Thread[D[phiLeftVector, x] == (QLeft -  	First[Flatten[{OptionValue[NormalizationConstants]}]] Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs},
+	  Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xb}, FilterRules[{opts}, Options[NDSolve]]][[1]];
+
+  solutionFromRight = NDSolve[{Thread[D[phiRightVector, x] == (QRight -  	Last[Flatten[{OptionValue[NormalizationConstants]}]] Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs},
+	  Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xa, xb},FilterRules[{opts}, Options[NDSolve]]][[1]];
 
   (* Laplace Expanded Derivative of the determinant*)
 
@@ -222,10 +275,10 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?Numeric
   
   Exp[-Integrate[Tr[AMatrix /. \[FormalLambda] -> \[FormalLambda]0], {x, xa, matchPoint}]] det /. x -> matchPoint /. solutionFromRight /. solutionFromLeft]
 
-ToLinearMatrixForm[eqn_, bcs_?ListQ, depvars_, x_ /; (!NumericQ[x] && !ListQ[x])] :=
-    If[bcs == {}, ToLinearMatrixForm[eqn, bcs, depvars, {x, 0, 0}], Message[ToLinearMatrixForm::noLimits];Return[$Failed]]
+ToMatrixSystem[eqn_, bcs_?ListQ, depvars_, x_ /; (!NumericQ[x] && !ListQ[x]), a_/; (!NumericQ[a] && !ListQ[a])] :=
+    If[bcs == {}, ToMatrixSystem[eqn, bcs, depvars, {x, 0, 0}], Message[ToMatrixSystem::noLimits];Return[$Failed]]
 
-ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}] :=
+ToMatrixSystem[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}, a_ /; (!NumericQ[a] && !ListQ[a])] :=
     Module[{allVariables, nDepVars, allVariablesInd, originalYVariablesInd, nODEi, eqns, newYs, linearisedEqn, YDerivativeVector, FVector, originalYVariables, depVariables, epsilonEqn, newYSubs, 
 	    newYDerivSubs, AMatrix, leftBCs, rightBCs, leftBCMatrix, rightBCMatrix, leftBCVector={}, rightBCVector={}, undifferentiatedVariables = {}, sol, undifsol},
 	    
@@ -264,7 +317,7 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}] :
 
 	(* Check if the linearised equation is the same as the original, if not throw a warning to make it explicit *)
 	If[! (Thread[(((linearisedEqn /. Equal -> Subtract) - (epsilonEqn /.Equal -> Subtract) // Simplify) == Table[0, nDepVars])] ===	True),
-		Message[ToLinearMatrixForm::linearised, linearisedEqn /. \[FormalE] -> 1]];
+		Message[ToMatrixSystem::linearised, linearisedEqn /. \[FormalE] -> 1]];
 
 	(* Replace all the original variables with a set indexed by Y *)
   newYs = Through[Array[\[FormalY], {Length[originalYVariables]}][x]];
@@ -278,7 +331,7 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}] :
 	        Join[D[originalYVariables /. newYSubs, x], undifferentiatedVariables]];
 	
 	(* Check that a single solution has been found *)
-  If[Length[sol] != 1, Message[ToLinearMatrixForm::somethingWrong];Return[$Failed]];
+  If[Length[sol] != 1, Message[ToMatrixSystem::somethingWrong];Return[$Failed]];
  
 	
 	(* Find the right hand side of Y' = A Y + F*)
@@ -287,7 +340,7 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}] :
 	FVector = YDerivativeVector /. Thread[newYs -> 0];
 
 	(* If the equation is inhomogeneous, print warning to say the CMM doesn't work *)
-  If[AnyTrue[FVector, (!PossibleZeroQ[#])&], Message[ToLinearMatrixForm::inhomogeneous]];
+  If[AnyTrue[FVector, (!PossibleZeroQ[#])&], Message[ToMatrixSystem::inhomogeneous]];
 
 	(*
 	Don't think this is doing anything...
@@ -312,14 +365,14 @@ ToLinearMatrixForm[eqn_, BCs_?ListQ, depvars_, {x_ /; !NumericQ[x], xa_, xb_}] :
 	
 	(* Return the solutions *)
 	If[AnyTrue[Join[leftBCVector,rightBCVector],(!PossibleZeroQ[#])&],
-		Message[ToLinearMatrixForm::inhomogeneousBCs,leftBCVector,rightBCVector];
+		Message[ToMatrixSystem::inhomogeneousBCs,leftBCVector,rightBCVector];
 		{AMatrix, {leftBCMatrix, leftBCVector}, {rightBCMatrix, rightBCVector}, {x, xa, xb}},
 
-	    {AMatrix, leftBCMatrix, rightBCMatrix, {x, xa, xb}}
+	    {AMatrix, leftBCMatrix, rightBCMatrix, {x, xa, xb}}/. a -> \[FormalLambda]
 	]
 ]
 
-ToLinearMatrixForm[eqns_?ListQ, BCs_?ListQ, {depvarLeft_, depvarRight_}, {x_, xa_, xmatch_, xb_}] :=
+ToMatrixSystem[eqns_?ListQ, BCs_?ListQ, {depvarLeft_, depvarRight_}, {x_, xa_, xmatch_, xb_}, a_/;(!NumericQ[a] && !ListQ[a])] :=
 
 (* Currently only works if the two dependent variables are given in that specific order *)
 
@@ -332,10 +385,10 @@ ToLinearMatrixForm[eqns_?ListQ, BCs_?ListQ, {depvarLeft_, depvarRight_}, {x_, xa
 			interfaceBCs =	Select[flatBCs,   !	FreeQ[#, \[FormalA]_[xmatch] /; ! (\[FormalA] === Derivative),	All] &];
 			FMatrix = ExtractInterface[interfaceBCs, depvarLeft, {x, xmatch}];
 			GMatrix = ExtractInterface[interfaceBCs, depvarRight, {x, xmatch}];
-			{leftAMatrix, leftBCMatrix, stuff, xLeft} =		  ToLinearMatrixForm[leftEqns, leftBCs, depvarLeft, {x, xa, xmatch}];
-			{rightAMatrix, stuff, rightBCMatrix, xRight} = 	ToLinearMatrixForm[rightEqns, rightBCs,	depvarRight, {x, xmatch, xb}];
+			{leftAMatrix, leftBCMatrix, stuff, xLeft} =		  ToMatrixSystem[leftEqns, leftBCs, depvarLeft, {x, xa, xmatch}, a];
+			{rightAMatrix, stuff, rightBCMatrix, xRight} = 	ToMatrixSystem[rightEqns, rightBCs,	depvarRight, {x, xmatch, xb}, a];
 			(*Return the system for using in CMM function*)
-			{{leftAMatrix, rightAMatrix}, leftBCMatrix,rightBCMatrix, {FMatrix,	GMatrix}, {x, xa, xmatch, xb}}
+			{{leftAMatrix, rightAMatrix}, leftBCMatrix,rightBCMatrix, {FMatrix,	GMatrix}, {x, xa, xmatch, xb}} /. a -> \[FormalLambda]
 
 		]
 
@@ -382,13 +435,13 @@ SelectPositiveEigenvectors[mat_?MatrixQ, x_ /; !NumericQ[x]] := Module[{limitMat
 
 	]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?NumericQ}, {{ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ},
-	leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
-		Evans[{\[FormalLambda], \[FormalLambda]0}, {ALeftMatrix,	ARightMatrix}, leftBCMatrix, rightBCMatrix,	{FMatrix,	GMatrix}, {x, xa, xm, xb},opts]
+Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ},
+	leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+		Evans[\[FormalLambda]0, {ALeftMatrix,	ARightMatrix}, leftBCMatrix, rightBCMatrix,	{FMatrix,	GMatrix}, {x, xa, xm, xb},opts]
 
-Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?
-		NumericQ}, {ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ}, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ,
-	{FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; !NumericQ[x], xaa_, xmm_, xbb_},opts:OptionsPattern[{NormalizationConstants -> {1, 1}}]] :=
+Evans[\[FormalLambda]0_?
+		NumericQ, {ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ}, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ,
+	{FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; !NumericQ[x], xaa_, xmm_, xbb_},opts:OptionsPattern[{Evans,NDSolve}]] :=
 		Module[{dettt, len, subsets, newYs, leftYICs, rightYICs, phiLeftVector, phiRightVector, LeftBCSolution, RightBCSolution, yLeft, yRight,
 			phiLeft, phiRight, LeftPositiveEigenvalues, RightNegativeEigenvalues, phiLeftICs, phiRightICs, QQ, solutionFromRight,
 			solutionFromLeft, det, matchPoint,lenLeft,lenRight,subsetsLeft,subsetsRight,QLeft,QRight,xa,xb,xm},
@@ -397,7 +450,10 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?
 			If[! NumericQ[xmm], xm = (xmm /. \[FormalLambda] -> \[FormalLambda]0),	xm = xmm];
 			If[! NumericQ[xbb],	xb = (xbb /. \[FormalLambda] -> \[FormalLambda]0),  xb = xbb];
 
-			If[Length[OptionValue[NormalizationConstants]]!=2,Message[Evans::normalizationConstants]; Return[$Failed]];
+
+			If[!(1<=Length[Flatten[{OptionValue[NormalizationConstants]}]]<=2),Message[Evans::normalizationConstants]; Return[$Failed]];
+
+
 
 		(*Check some conditions are true *)
 		If[Length[ALeftMatrix] != Length[Transpose[ALeftMatrix]],
@@ -495,14 +551,12 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?
 		(*Solve for integrating from the left and right*)
 		solutionFromLeft =
 				NDSolve[{Thread[
-					D[phiLeftVector, x] == (QLeft -	First[OptionValue[NormalizationConstants]] Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs},
-					Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xm},
-					MaxStepFraction -> 0.05][[1]];
+					D[phiLeftVector, x] == (QLeft -	First[Flatten[{OptionValue[NormalizationConstants]}]] Total[Re@LeftPositiveEigenvalues] IdentityMatrix[Length[QLeft]]).phiLeftVector], phiLeftICs},
+					Array[\[FormalPhi]L, {Length[subsetsLeft]}], {x, xa, xm}, FilterRules[{opts}, Options[NDSolve]]][[1]];
 		solutionFromRight =
 				NDSolve[{Thread[
-					D[phiRightVector,	x] == (QRight -	Last[OptionValue[NormalizationConstants]] Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs},
-					Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xm, xb},
-					MaxStepFraction -> 0.05][[1]];
+					D[phiRightVector,	x] == (QRight -	Last[Flatten[{OptionValue[NormalizationConstants]}]] Total[Re@RightNegativeEigenvalues] IdentityMatrix[Length[QRight]]).phiRightVector], phiRightICs},
+					Array[\[FormalPhi]R, {Length[subsetsRight]}], {x, xm, xb}, FilterRules[{opts}, Options[NDSolve]]][[1]];
 
 		(* Now we need to account for the jump conditions at the interface, so instead of the normal determinant it needs
 		   modifying by multiplication by the matrices F and G. *)
@@ -513,13 +567,70 @@ Evans[{\[FormalLambda]_ /; !NumericQ[\[FormalLambda]], \[FormalLambda]0_?
 		dettt =
 				det /.rulesFG[len]/.reprules2 /.Thread[subsetsLeft -> Range[Length[subsetsLeft]]]
 						/.Thread[subsetsRight -> Range[Length[subsetsRight]]];
-
+		
 		Exp[-Integrate[
 			Tr[ALeftMatrix /. \[FormalLambda] -> \[FormalLambda]0], {x, xa, xm}]]
 			dettt /. {F[i_, j_] :> FMatrix[[i, j]],	G[i_, j_] :> GMatrix[[i, j]]} /.
 				x -> xm /. \[FormalLambda] -> \[FormalLambda]0 /.	solutionFromRight /. solutionFromLeft
 		]
 
+
+PositiveSemiCircleContour[radius_?Positive, ninc : (_?Positive) : 50] :=
+		Join[Table[ii I, {ii, Subdivide[radius, radius/1000, Ceiling[ninc/4]]}], {radius/1000 I, -(radius/1000) I},
+			Table[ii I, {ii,Subdivide[-(radius/1000), -radius, Ceiling[ninc/4]]}],
+			Table[radius Exp[I \[Theta]], {\[Theta],Subdivide[-\[Pi]/2, \[Pi]/2, Ceiling[ninc/2]]}]
+		];
+
+CircleContour[radius_?NumericQ, ninc:(_?NumericQ): 50, Centre:(_?ListQ):{0,0}] :=	Select[Table[radius Exp[I \[Theta] ] + Centre[[1]] + I Centre[[2]], {\[Theta],Subdivide[-\[Pi], \[Pi], ninc]}], Abs[#] > 0 &];
+CircleContour[radius_?NumericQ, ninc_?NumericQ, Centre_?NumericQ] :=	Select[Table[radius Exp[I \[Theta] ] + Centre, {\[Theta],Subdivide[-\[Pi], \[Pi], ninc]}], Abs[#] > 0 &];
+
+
+WindingNumber[EvansPoints_?(MatrixQ[#, NumericQ] &), Centre_: {0, 0}] := Module[{},
+	If[Length[EvansPoints]==0, Message[WindingNumber::noPointsGiven];	Return[$Failed]];
+	If[Length[Centre]==0,Centre={0,0}];
+	Graphics`PolygonUtils`PointWindingNumber[EvansPoints, Centre]
+]
+
+WindingNumber[EvansPoints_, Centre_ /; (Im[Centre] != 0)] := 	WindingNumber[EvansPoints, ReIm[Centre]]
+
+PlotEvansBoth[contourPoints_,EvansPoints_,opts:OptionsPattern[{GraphicsRow,ListPlot}]]:=
+      Module[{},GraphicsRow[{ListPlot[ReIm[contourPoints],
+       PlotLabel->"Curve in complex \[Lambda] space",AxesLabel->{"Re(\[Lambda])","Im(\[Lambda])"},
+       FilterRules[{opts},Options[ListPlot]]],Labeled[ListPlot[EvansPoints,PlotRange->All,AxesLabel->{"Re(D(\[Lambda]))","Im(D(\[Lambda]))"},
+       FilterRules[{opts},Options[ListPlot]]],"Evans function in complex space",Top]},
+PlotLabel->"Winding Number: "<>ToString[WindingNumber[EvansPoints]],Sequence@@FilterRules[{opts},Options[GraphicsRow]]]]
+
+Options[PlotEvansSemiCircle] = {Joined -> True,  nPoints -> 50, ContourRadius -> 1};
+PlotEvansSemiCircle[sys_,
+	opts : OptionsPattern[{Evans, NDSolve, ListPlot, GraphicsRow,PlotEvansSemiCircle}]] :=
+	Module[{contour},
+	  contour=N@PositiveSemiCircleContour[OptionValue[ContourRadius], OptionValue[nPoints]];
+		Quiet[PlotEvansBoth[contour,
+			ReIm[Evans[N@#, sys,
+				Sequence @@ FilterRules[{opts}, Options /@ {NDSolve, Evans}]] & /@contour],
+			Sequence @@ FilterRules[{opts}, Options[ListPlot]]],General::munfl]
+			]
+
+reIm[a_?AtomQ]:={Re[a],Im[a]}
+reIm[a_]:=a
+		
+Options[PlotEvansCircle] = {Joined -> True,  nPoints->50, ContourCenter -> {0,0}, ContourRadius->1};	
+PlotEvansCircle[sys_,opts:OptionsPattern[{PlotEvansCircle,Evans,NDSolve,ListPlot,GraphicsRow}]]:=
+Module[{contour},
+   contour=N@CircleContour[OptionValue[ContourRadius],OptionValue[nPoints],reIm[OptionValue[ContourCenter]]];
+   Quiet[PlotEvansBoth[contour,ReIm[(Evans[#1,sys,FilterRules[{opts},Options/@{NDSolve,Evans}]]&)/@contour],Sequence@@FilterRules[{opts},Options/@{ListPlot,GraphicsRow}]],General::munfl]
+]
+
+
+
+Options[WindingNumberSemiCircle] = {nPoints->50, ContourRadius->1};	
+
+WindingNumberSemiCircle[sys_, opts : OptionsPattern[{WindingNumberSemiCircle, Evans, NDSolve}]] :=
+		WindingNumber[ReIm[Evans[#, sys, FilterRules[{opts},Options/@{NDSolve,Evans}]] & /@PositiveSemiCircleContour[OptionValue[ContourRadius], OptionValue[nPoints]]]]
+
+Options[WindingNumberCircle] = {Joined -> True,  nPoints->50, ContourCenter -> {0,0}, ContourRadius->1};	
+WindingNumberCircle[sys_, opts : OptionsPattern[{WindingNumberCircle, Evans, NDSolve}]] :=
+		WindingNumber[ReIm[Evans[#, sys, FilterRules[{opts},Options/@{NDSolve,Evans}]] & /@CircleContour[OptionValue[ContourRadius], OptionValue[nPoints], OptionValue[ContourCenter]]]] 
 
 
 End[]; (* End Private Context *)
