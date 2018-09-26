@@ -10,7 +10,7 @@ Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-bac
      Needs["PacletManager`"]
      PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/PacletServer/master"]
         
- Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.7.paclet"]`
+ Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`
 
 The package can then be loaded by calling 
 
@@ -20,34 +20,33 @@ The package can then be loaded by calling
 
 The Compound Matrix Method is a package for finding eigenvalues of boundary-value ordinary differential equations.
 
-First we need to transform the BVP into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary (with a warning if it does). 
+First we need to transform the boundary-value problem (BVP) into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary (with a warning if it does). 
 
-        sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}]
+        sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}, k]
 
 This will store the system into the variable `sys`. We can then evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
 
-        Evans[{k,1},sys]
+        Evans[1,sys]
         -0.841471
     
 Zeros of this function correspond to eigenvalues of the original BVP: 
 
-    FindRoot[Evans[{k, k0}, sys], {k0, 1}]
-    {k0 -> 3.14159}
+    FindRoot[Evans[k, sys], {k, 1}]
+    {k -> 3.14159}
     
 The function is smooth and can be plotted by the built-in routines:
     
-    Plot[Evans[{k, k0}, sys], {k0, 0, 15}]
+    Plot[Evans[k, sys], {k, 0, 15}]
    
-A further nine examples are shown in the file `CMMExamples.nb`.
+A further set of examples are shown in the file `CMMExamples.nb`.
 
 ## Citations
 
-I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also available on the arXiv). I'm currently working on an expository paper to detail how the method works and introduce the package.
+I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also available on the arXiv), as well as <a href=https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.033003>an example with an interface</a>. I'm currently working on an expository paper to detail how the method works and introduce the package.
 
 ## Contact
 
-Feel free to contact me if you have any questions, suggestions or issues.
-I'm also interested in collaborations involving this work.
+Feel free to contact me if you have any questions, suggestions or issues, I'm also interested in collaborations involving this work.
 My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk. 
 
 ## Funding Acknowledgement
