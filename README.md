@@ -24,7 +24,9 @@ First we need to transform the boundary-value problem (BVP) into a set of first 
 
         sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}, k]
 
-This will store the system into the variable `sys`. We can then evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
+This will store the system into the variable `sys`. The syntax is similar to that of ParametricNDSolve, with the differential equations, boundary conditions, dependent variables, independent variable and eigenvalue.
+
+We can then evaluate the Evans function at a given guess of the eigenvalue `k` (here k=1):
 
         Evans[1,sys]
         -0.841471
