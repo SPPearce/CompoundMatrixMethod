@@ -20,9 +20,9 @@ The package can then be loaded by calling
 
 The Compound Matrix Method is a package for finding eigenvalues of boundary-value ordinary differential equations.
 
-First we need to transform the boundary-value problem (BVP) into a set of first order matrix equations. The function ToLinearMatrixForm will do this, linearising the equations if necessary (with a warning if it does). 
+First we need to transform the boundary-value problem (BVP) into a set of first order matrix equations. The function ToMatrixSystem will do this, linearising the equations if necessary (with a warning if it does). 
 
-        sys=ToLinearMatrixForm[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}, k]
+        sys=ToMatrixSystem[y''[x] + k^2 y[x] == 0, {y[0] == 0, y[1] == 0}, y, {x, 0, 1}, k]
 
 This will store the system into the variable `sys`. The syntax is similar to that of ParametricNDSolve, with the differential equations, boundary conditions, dependent variables, independent variable and eigenvalue.
 
@@ -40,11 +40,11 @@ The function is smooth and can be plotted by the built-in routines:
     
     Plot[Evans[k, sys], {k, 0, 15}]
    
-A further set of examples are shown in the file `CMMExamples.nb`.
+A number of further examples are shown in the file `CMMExamples.nb`.
 
 ## Citations
 
-I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also available on the arXiv), as well as <a href=https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.033003>an example with an interface</a>. I'm currently working on an expository paper to detail how the method works and introduce the package.
+I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also freely available on the arXiv), and the package itself in both <a href=https://link.springer.com/article/10.1007/s11538-018-0505-4>a tenth-order ODE </a> as well as <a href=https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.033003>an example with an interface</a>. I'm currently working on an expository paper to detail how the method works and introduce the package.
 
 ## Contact
 
