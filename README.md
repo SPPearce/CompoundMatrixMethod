@@ -8,7 +8,7 @@ Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-bac
  The initial version is available as a  `.paclet` file. Download and install it using the `PacletInstall` function in Mathematica:
  
      Needs["PacletManager`"]
-     PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/PacletServer/master"]
+     PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/Repository/master"]
         
  Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`
 
@@ -40,11 +40,13 @@ The function is smooth and can be plotted by the built-in routines:
     
     Plot[Evans[k, sys], {k, 0, 15}]
    
-A number of further examples are shown in the file `CMMExamples.nb`.
+A number of further examples are shown in the file `CMMExamples.nb`, available from this respository.
 
 ## Citations
 
-I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a> (also freely available on the arXiv), and the package itself in both <a href=https://link.springer.com/article/10.1007/s11538-018-0505-4>a tenth-order ODE </a> as well as <a href=https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.033003>an example with an interface</a>. I'm currently working on an expository paper to detail how the method works and introduce the package.
+I used this method to solve an eigenvalue problem in <a href=https://doi.org//10.1093/imamat/hxq026>my 2010 paper </a>, and the package itself in both <a href=https://link.springer.com/article/10.1007/s11538-018-0505-4>a tenth-order ODE </a> as well as <a href=https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.033003>an example with an interface</a>. 
+
+I'm currently working on an expository paper to detail how the method works and introduce the package.  
 
 ## Contact
 
@@ -53,4 +55,4 @@ My email address is simon (dot) pearce (at) manchester (dot) ac (dot) uk.
 
 ## Funding Acknowledgement
 
-This code was initially written while I held an Early Career Fellowship from the <a href=https://www.leverhulme.ac.uk>Leverhulme Trust</a>.
+This code was initially written while I held an Early Career Fellowship from the <a href=https://www.leverhulme.ac.uk>Leverhulme Trust</a>. I'm now funded by the charity Cancer Research UK (CRUK), while based at the CRUK Manchester Institute.
