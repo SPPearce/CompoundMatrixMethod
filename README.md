@@ -40,7 +40,8 @@ The function is smooth and can be plotted by the built-in routines:
     
     Plot[Evans[k, sys], {k, 0, 15}]
    
-A number of further examples are shown in the file `CMMExamples.nb`, available from this respository. This inclu
+A number of further examples are shown in the file `CMMExamples.nb`, available from this respository. This includes examples with boundary conditions at infinity, higher order equations (up to 10th order), split domains with interface conditions and when higher precision is required. Also check out where I have <a href=https://mathematica.stackexchange.com/search?q=compoundmatrixmethod> answered questions on stackexchange using the package</a>.
+
 
 ## Citations
 
