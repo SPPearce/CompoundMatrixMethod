@@ -10,7 +10,7 @@ Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-bac
      Needs["PacletManager`"]
      PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/Repository/master"]
         
-Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`. If all else fails, you can copy the files from github to a folder called CompoundMatrixMethod in 11.2/AddOns/Applications.
+Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`. If all else fails, you can copy the files from github to a folder called CompoundMatrixMethod in  the AddOns/Applications folder on your computer.
 
 The package can then be loaded by calling 
 
