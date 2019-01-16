@@ -1,7 +1,7 @@
 # MMA-CompoundMatrixMethod
 Solving boundary-value eigenvalue problems in Mathematica using the Compound Matrix Method to construct the Evans function.
 
-Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf>here </a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. 
+Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-background.pdf>here </a> and at this <a href=https://mathematica.stackexchange.com/questions/155079/finding-eigenvalues-for-a-boundary-value-problem>stack exchange question</a>. I'm working on a publication with the details, please feel free to email me (address below) to see my current version of it.
 
 
 ## How to Download the latest release
@@ -10,7 +10,7 @@ Mathematical details may be found <a href=http://www.maths.gla.ac.uk/~xl/FYB-bac
      Needs["PacletManager`"]
      PacletInstall["CompoundMatrixMethod", "Site" -> "http://raw.githubusercontent.com/paclets/Repository/master"]
         
- Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`
+Alternatively, download the paclet locally and install using `PacletInstall` on the appropriate directory. For example, if the file was downloaded to the directory `~/Downloads`, evaluate  `PacletInstall["~/Downloads/CompoundMatrixMethod-0.9.paclet"]`. If all else fails, you can copy the files from github to a folder called CompoundMatrixMethod in 11.2/AddOns/Applications.
 
 The package can then be loaded by calling 
 
@@ -40,7 +40,7 @@ The function is smooth and can be plotted by the built-in routines:
     
     Plot[Evans[k, sys], {k, 0, 15}]
    
-A number of further examples are shown in the file `CMMExamples.nb`, available from this respository.
+A number of further examples are shown in the file `CMMExamples.nb`, available from this respository. This inclu
 
 ## Citations
 
