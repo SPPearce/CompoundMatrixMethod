@@ -26,7 +26,8 @@ F.y + G.z = 0 at the interface given by x=xmatch.";
 ToMatrixSystem::usage = "\
 ToMatrixSystem[eqn,{},depvars,x] takes a list of differential equations in the dependent variables depvars and independent variable x and puts the equations into linear matrix form dy/dx = A.y
 ToMatrixSystem[eqn,bcs,depvars,{x,x0,x1}] also includes the boundary conditions evaluated at x=x0 and x=x1.
-ToMatrixSystem[{eqns1,eqns2},{bcs,interfaceEqns},depvars,{x,x0,xmatch,x1}] sets up the function with an interface at x=xmatch, with eqns1 in x0<x<xmatch and eqns2 in xmatch<x<x1.";
+ToMatrixSystem[{eqns1,eqns2},{bcs,interfaceEqns},depvars,{x,x0,xmatch,x1}] sets up the function with an interface at x=xmatch, with eqns1 in x0<x<xmatch and eqns2 in xmatch<x<x1. 
+   Note the dependent variables must be a list with the first element being the variables for eqns1 and the second being for eqns2.";
 
 Evans::boundarySolutionFailed = "Applying the boundary conditions at `1` failed, perhaps you don't have any conditions there.";
 Evans::nonSquareMatrix = "The matrix A is not square.";
@@ -79,26 +80,26 @@ Setting to zero applies no scaling, setting to 1 removes the exponential growth 
 WindingNumber::usage="\
 WindingNumber[pts] calculates the Winding Number of the set of points which make a closed contour in the complex plane, around the origin.
 WindingNumber[pts,{x0,y0}] calculates the Winding Number around centre {x0,y0}.";
-
 WindingNumberCircle::usage="\
-WindingNumberCircle[k,sys,r,inc] evaluates the Evans function Winding Number for the circular contour of radius r for a system defined from ToMatrixSystem with potential eigenvalue k.
-	The default value for inc is 50. This should correspond to the number of eigenvalues within the contour.
-WindingNumberCircle[k,sys,r,inc,{x0,y0}] evaluates the contour around {x0,y0}.";
+WindingNumberCircle[sys] evaluates the Evans function Winding Number for the circular contour (default radius 1) for a system defined by ToMatrixSystem.
+	This should correspond to the number of eigenvalues within the contour. The option nPoints controls how many points to sample, ContourRadius how big the circle is 
+    and ContourCenter where the circle is centered (as a list of {x,y} or a complex number).";
 
 WindingNumberSemiCircle::usage="\
-WindingNumberSemiCircle[k,sys,r,inc] evaluates the Evans function Winding Number for the semicircular contour in the positive complex plane (including the axis)
-with radius r, for a system defined from ToMatrixSystem with potential eigenvalue k. This winding number corresponds to the number of eigenvalues within the contour.
-	The value inc determines how many points to calculate on the contour, with the default being 50. ";
+WindingNumberSemiCircle[sys] evaluates the Evans function Winding Number for the semicircular contour in the positive complex plane, including the imaginary axis, 
+with radius controlled by ContourRadius (default 1), for a system defined from ToMatrixSystem. This winding number corresponds to the number of eigenvalues within the contour.
+	The option nPoints determines how many points to calculate on the contour, with the default being 50. ";
 
 PlotEvansBoth::usage="Generate two plots, showing both the original contour for k as well as the contour of the Evans function D(k).";
 PlotEvansCircle::usage="\
-PlotEvansCircle[k, sys,	r, inc] generates a contour of radius r (and spacing inc) in the complex plane,
-calculates the Evans function around this contour and plots the two contours along with the Winding Number.
-PlotEvansCircle[k, sys,	r, inc,{x0,y0}] centres the contour at {x0,y0}.";
+PlotEvansCircle[sys] generates a contour of (default radius 1) in the complex plane, for a system defined by ToMatrixSystem, and calculates the winding number.
+	The winding number correspond to the number of eigenvalues contained within the contour. The option nPoints controls how many points to sample, ContourRadius how big the circle is 
+    and ContourCenter where the circle is centered (as a list of {x,y} or a complex number). Joined controls whether to join the points in the plot.";
 
 
-PlotEvansSemiCircle::usage="PlotEvansSemiCircle[k, sys,	r, inc] generates a semi-circular contour of radius r (split into ~ninc points) in the complex plane (including the imaginary axis),
-calculates the Evans function around this contour and plots the two contours along with the Winding Number.";
+PlotEvansSemiCircle::usage="PlotEvansSemiCircle[sys] generates a semi-circular contour (default radius 1), split into points (default 50) in the positive half of the complex plane 
+    (including the imaginary axis), calculates the Evans function around this contour and plots the two contours along with the Winding Number.
+    The options ContourRadius controls the size of the contour, nPoints how many points to sample and Joined whether to join the points.";
 
 PositiveSemiCircleContour::usage="\
 PositiveSemiCircleContour[r, inc] generates a semicircular contour in the positive complex plane (including the axis) with radius r, with the contour split into approximately inc (default 50) points.";
@@ -376,13 +377,15 @@ ToMatrixSystem[eqns_?ListQ, BCs_?ListQ, {depvarLeft_, depvarRight_}, {x_, xa_, x
 
 (* Currently only works if the two dependent variables are given in that specific order *)
 
-		Module[{leftEqns, rightEqns, leftBCs, rightBCs, FMatrix, GMatrix,	leftAMatrix, rightAMatrix, leftBCMatrix, rightBCMatrix, stuff, xLeft, xRight,interfaceBCs,flatBCs},
+		Module[{flatDepVarLeft,flatDepVarRight,leftEqns, rightEqns, leftBCs, rightBCs, FMatrix, GMatrix,	leftAMatrix, rightAMatrix, leftBCMatrix, rightBCMatrix, stuff, xLeft, xRight,interfaceBCs,flatBCs},
 			flatBCs = Flatten[BCs];
-			leftEqns = Select[eqns, ! FreeQ[#, depvarLeft] &];
-			rightEqns = Select[eqns, ! FreeQ[#, depvarRight] &];
-			leftBCs =		Select[flatBCs, !	FreeQ[#, \[FormalA]_[xa] /; ! (\[FormalA] === Derivative),	All] &];
-			rightBCs =	Select[flatBCs, !	FreeQ[#, \[FormalA]_[xb] /; ! (\[FormalA] === Derivative),	All] &];
-			interfaceBCs =	Select[flatBCs,   !	FreeQ[#, \[FormalA]_[xmatch] /; ! (\[FormalA] === Derivative),	All] &];
+			flatDepVarLeft=Flatten[{depvarLeft}];
+			flatDepVarRight=Flatten[{depvarRight}];
+			leftEqns=Union@Flatten@Table[Select[eqns,!FreeQ[#,ii]&],{ii,flatDepVarLeft}];
+			rightEqns=Union@Flatten@Table[Select[eqns,!FreeQ[#,ii]&],{ii,flatDepVarRight}];
+			leftBCs =		Select[flatBCs, !	FreeQ[#, \[FormalA]_[xa] /; ! (\[FormalA]===Derivative || \[FormalA]===Log || \[FormalA]===Sin || \[FormalA]===Cos || \[FormalA]===Exp || \[FormalA]===Tan),	All] &];
+			rightBCs =	Select[flatBCs, !	FreeQ[#, \[FormalA]_[xb] /; ! (\[FormalA]===Derivative || \[FormalA]===Log || \[FormalA]===Sin || \[FormalA]===Cos || \[FormalA]===Exp || \[FormalA]===Tan),	All] &];
+			interfaceBCs =	Select[flatBCs,   !	FreeQ[#, \[FormalA]_[xmatch] /; ! (\[FormalA]===Derivative || \[FormalA]===Log || \[FormalA]===Sin || \[FormalA]===Cos || \[FormalA]===Exp|| \[FormalA]===Tan),	All] &];
 			FMatrix = ExtractInterface[interfaceBCs, depvarLeft, {x, xmatch}];
 			GMatrix = ExtractInterface[interfaceBCs, depvarRight, {x, xmatch}];
 			{leftAMatrix, leftBCMatrix, stuff, xLeft} =		  ToMatrixSystem[leftEqns, leftBCs, depvarLeft, {x, xa, xmatch}, a];
