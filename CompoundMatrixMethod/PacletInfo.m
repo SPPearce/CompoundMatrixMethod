@@ -3,7 +3,7 @@
 (* ::Input::Initialization:: *)
 Paclet[
 Name->"CompoundMatrixMethod",
-Version->"0.9",
+Version->"0.91",
 MathematicaVersion->"10+",
 Description->"Solve Eigenvalue Boundary Value Problems using the Compound Matrix Method to generate the Evans function. ",
 Creator->"Simon Pearce",

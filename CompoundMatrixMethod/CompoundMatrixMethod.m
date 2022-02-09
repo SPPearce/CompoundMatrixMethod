@@ -5,11 +5,11 @@
 (* :Title: CompoundMatrixMethod *)
 (* :Author: Simon Pearce <simon.pearce@manchester.ac.uk> *)
 (* :Context: CompoundMatrixMethod` *)
-(* :Version: 0.9 *)
-(* :Date: 2018-09-26 *)
+(* :Version: 0.91 *)
+(* :Date: 2022-02-09 *)
 
 (* :Mathematica Version: 10+ *)
-(* :Copyright: (c) 2017-18 Simon Pearce *)
+(* :Copyright: (c) 2017-22 Simon Pearce *)
 
 BeginPackage["CompoundMatrixMethod`"];
 
@@ -137,20 +137,20 @@ qMatrix[len_?NumericQ, len2_?NumericQ] := qMatrix[len, len2] =
   Transpose[Table[Coefficient[minorsTab, \[FormalPhi][i]], {i, 1, Binomial[len, len2]}]]
 ]
 
-rulesFG[len_?NumericQ] := rulesFG[len] = {\[FormalPhi]\[FormalPhi]L[{l_}][x_] :>	Sum[F[l, a] \[FormalPhi]L[a][x], {a, 1,	len}],
-	\[FormalPhi]\[FormalPhi]L[{l_, m_}][x_] :>	Sum[F[l, a] F[m, b] \[FormalPhi]L[{a, b}][x], {a, 1, len}, {b, 1,	len}],
-	\[FormalPhi]\[FormalPhi]L[{l_, m_, n_}][x_] :>	Sum[F[l, a] F[m, b] F[n, c] \[FormalPhi]L[{a, b, c}][x], {a, 1,	len}, {b, 1, len}, {c, 1,	len}],
-	\[FormalPhi]\[FormalPhi]L[{l_, m_, n_, o_}][x_] :>	Sum[F[l, a] F[m, b] F[n, c] F[o, d]
-		\[FormalPhi]L[{a, b, c, d}][x], {a, 1, len}, {b, 1, len}, {c, 1, len}, {d, 1,	len}],
-	\[FormalPhi]\[FormalPhi]L[{l_, m_, n_, o_, p_}][x_] :>	Sum[F[l, a] F[m, b] F[n, c] F[o, d] F[p,e]
-		\[FormalPhi]L[{a, b, c, d, e}][x], {a, 1, len}, {b, 1, len}, {c, 1, len}, {d, 1, len}, {e, 1, len}],
-	\[FormalPhi]\[FormalPhi]R[{l_}][x_] :>	Sum[G[l, a] \[FormalPhi]R[a][x], {a, 1,	len}],
-	\[FormalPhi]\[FormalPhi]R[{l_, m_}][x_] :>	Sum[G[l, a] G[m, b] \[FormalPhi]R[{a, b}][x], {a, 1, len}, {b, 1,	len}],
-	\[FormalPhi]\[FormalPhi]R[{l_, m_, n_}][x_] :>	Sum[G[l, a] G[m, b] G[n, c] \[FormalPhi]R[{a, b, c}][x], {a, 1,	len}, {b, 1, len}, {c, 1, len}],
-	\[FormalPhi]\[FormalPhi]R[{l_, m_, n_, o_}][x_] :>	Sum[G[l, a] G[m, b] G[n, c] G[o, d] \[FormalPhi]R[{a, b, c, d}][
-		x], {a, 1, len}, {b, 1, len}, {c, 1, len}, {d, 1,	len}],
-	\[FormalPhi]\[FormalPhi]R[{l_, m_, n_, o_, p_}][x_] :>	Sum[G[l, a] G[m, b] G[n, c] G[o, d] G[p, e]
-		\[FormalPhi]R[{a, b, c, d, e}][x], {a, 1, len}, {b, 1, len}, {c, 1, len}, {d, 1, len}, {e, 1, len}]};
+rulesF[len_?NumericQ]:= rulesF[len]= {
+		\[FormalPhi]\[FormalPhi]L[{l_}][x_]:>Sum[F[l,a] \[FormalPhi]L[a][x],{a,1,len}],
+		\[FormalPhi]\[FormalPhi]L[{l_,m_}][x_]:>Sum[F[l,a] F[m,b] \[FormalPhi]L[{a,b}][x],{a,1,len},{b,1,len}],
+		\[FormalPhi]\[FormalPhi]L[{l_,m_,n_}][x_]:>Sum[F[l,a] F[m,b] F[n,c] \[FormalPhi]L[{a,b,c}][x],{a,1,len},{b,1,len},{c,1,len}],
+		\[FormalPhi]\[FormalPhi]L[{l_,m_,n_,o_}][x_]:>Sum[F[l,a] F[m,b] F[n,c] F[o,d] \[FormalPhi]L[{a,b,c,d}][x],{a,1,len},{b,1,len},{c,1,len},{d,1,len}],
+		\[FormalPhi]\[FormalPhi]L[{l_,m_,n_,o_,p_}][x_]:>Sum[F[l,a] F[m,b] F[n,c] F[o,d] F[p,e] \[FormalPhi]L[{a,b,c,d,e}][x],{a,1,len},{b,1,len},{c,1,len},{d,1,len},{e,1,len}]};
+
+rulesG[len_?NumericQ]:=rulesG[len]={
+		\[FormalPhi]\[FormalPhi]R[{l_}][x_]:>Sum[G[l,a] \[FormalPhi]R[a][x],{a,1,len}],
+		\[FormalPhi]\[FormalPhi]R[{l_,m_}][x_]:>Sum[G[l,a] G[m,b] \[FormalPhi]R[{a,b}][x],{a,1,len},{b,1,len}],
+		\[FormalPhi]\[FormalPhi]R[{l_,m_,n_}][x_]:>Sum[G[l,a] G[m,b] G[n,c] \[FormalPhi]R[{a,b,c}][x],{a,1,len},{b,1,len},{c,1,len}],
+		\[FormalPhi]\[FormalPhi]R[{l_,m_,n_,o_}][x_]:>Sum[G[l,a] G[m,b] G[n,c] G[o,d] \[FormalPhi]R[{a,b,c,d}][x],{a,1,len},{b,1,len},{c,1,len},{d,1,len}],
+		\[FormalPhi]\[FormalPhi]R[{l_,m_,n_,o_,p_}][x_]:>Sum[G[l,a] G[m,b] G[n,c] G[o,d] G[p,e] \[FormalPhi]R[{a,b,c,d,e}][x],{a,1,len},{b,1,len},{c,1,len},{d,1,len},{e,1,len}]};
+
 
 
 Options[Evans]={NormalizationConstants -> 1, MaxStepFraction->0.01};
@@ -445,7 +445,7 @@ Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ}
 Evans[\[FormalLambda]0_?
 		NumericQ, {ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ}, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ,
 	{FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; !NumericQ[x], xaa_, xmm_, xbb_},opts:OptionsPattern[{Evans,NDSolve}]] :=
-		Module[{dettt, len, subsets, newYs, leftYICs, rightYICs, phiLeftVector, phiRightVector, LeftBCSolution, RightBCSolution, yLeft, yRight,
+		Module[{dettt, lenAL,lenAR, subsets, newYsL,newYsR, leftYICs, rightYICs, phiLeftVector, phiRightVector, LeftBCSolution, RightBCSolution, yLeft, yRight,
 			phiLeft, phiRight, LeftPositiveEigenvalues, RightNegativeEigenvalues, phiLeftICs, phiRightICs, QQ, solutionFromRight,
 			solutionFromLeft, det, matchPoint,lenLeft,lenRight,subsetsLeft,subsetsRight,QLeft,QRight,xa,xb,xm},
 
@@ -478,31 +478,26 @@ Evans[\[FormalLambda]0_?
 		If[! MatrixQ[ARightMatrix /. x -> xb /. \[FormalLambda] -> \[FormalLambda]0 ,NumericQ],
 			Message[Evans::nonNumericalMatrix, ARightMatrix,	xb]; Return[$Failed]];
 
-
-		If[Length[ARightMatrix] != Length[ALeftMatrix],
-			Message[Evans::MatrixSizesDiffer, ALeftMatrix, ARightMatrix];Return[$Failed]];
-
-		len = Length[ARightMatrix];
-
-		If[len>10,	Message[Evans::InterfaceTooBig, len];Return[$Failed]];
-
-
-		newYs = Through[Array[\[FormalY], {len}][x]];
+		lenAL=Length[ALeftMatrix];
+		lenAR=Length[ARightMatrix];
+		If[Max[lenAL,lenAR]>10,Message[Evans::InterfaceTooBig,Max[lenAL,lenAR]];Return[$Failed]];
+		newYsL=Through[Array[\[FormalY],{lenAL}][x]];
+		newYsR=Through[Array[\[FormalY],{lenAR}][x]];
 
 		(*Initial conditions for shooting from the LHS*)
 		LeftBCSolution =
-				Quiet@Solve[leftBCMatrix.newYs == 0, newYs];
+				Quiet@Solve[leftBCMatrix.newYsL == 0, newYsL];
 		leftYICs =
 				NullSpace[leftBCMatrix /. x -> xa /. \[FormalLambda] -> \[FormalLambda]0,	Method -> "DivisionFreeRowReduction"];
 		lenLeft = Length[leftYICs];
-		subsetsLeft = Subsets[Range[len], {lenLeft}];
+		subsetsLeft = Subsets[Range[lenAL], {lenLeft}];
 		(*Initial conditions for shooting from the RHS*)
 		RightBCSolution =
-				Quiet@Solve[rightBCMatrix.newYs == 0, newYs];
+				Quiet@Solve[rightBCMatrix.newYsR == 0, newYsR];
 		rightYICs =
 				NullSpace[rightBCMatrix /. x -> xb /. \[FormalLambda] -> \[FormalLambda]0,	Method -> "DivisionFreeRowReduction"];
 		lenRight = Length[rightYICs];
-		subsetsRight = Subsets[Range[len], {lenRight}];
+		subsetsRight = Subsets[Range[lenAR], {lenRight}];
 		(*Check the initial conditions for each side are enough*)
 		If[Length[LeftBCSolution] != 1,
 			Message[Evans::boundarySolutionFailed, xa];
@@ -510,7 +505,7 @@ Evans[\[FormalLambda]0_?
 		If[Length[RightBCSolution] != 1,
 			Message[Evans::boundarySolutionFailed, xb];
 			Return[$Failed]];
-		If[Length[leftYICs] + Length[rightYICs] != len,
+		If[Length[leftYICs]+Length[rightYICs]!=((lenAL+lenAR)/2),
 			Message[Evans::boundaryConditionRank];
 			Return[$Failed]];
 		(*Generate two sets of Phi vaiables,these will be the matrix minors*)
@@ -521,9 +516,9 @@ Evans[\[FormalLambda]0_?
 				Table[\[FormalPhi]R[i][x], {i, 1, Length[subsetsRight]}];
 		(*Full set of Initial Conditions for the left and right sides,	with the BCs incorporated*)
 		yLeft =
-				Transpose[leftYICs + Table[newYs, {lenLeft}] /. LeftBCSolution[[1]] /.Thread[newYs -> 0]];
+				Transpose[leftYICs + Table[newYsL, {lenLeft}] /. LeftBCSolution[[1]] /.Thread[newYsL -> 0]];
 		yRight =
-				Transpose[rightYICs + Table[newYs, {lenRight}] /. RightBCSolution[[1]] /.Thread[newYs -> 0]];
+				Transpose[rightYICs + Table[newYsR, {lenRight}] /. RightBCSolution[[1]] /.Thread[newYsR -> 0]];
 		(*Use the initial conditions on the Y vectors to generate initial conditions for the minors phi*)
 		phiLeft = (Det[(yLeft /.   x -> xa /. \[FormalLambda] -> \[FormalLambda]0)[[#]]] & /@subsetsLeft);
 		phiRight = (Det[(yRight /. x -> xb /. \[FormalLambda] -> \[FormalLambda]0)[[#]]] & /@subsetsRight);
@@ -545,10 +540,10 @@ Evans[\[FormalLambda]0_?
 						phiRight];
 		(*Calculate the Q matrix (phi'=Q phi) for each side*)
 		QLeft =
-				qMatrix[len, lenLeft] /. \[FormalCapitalA][i_, j_] :>
+				qMatrix[lenAL, lenLeft] /. \[FormalCapitalA][i_, j_] :>
 						ALeftMatrix[[i, j]] /. \[FormalLambda] -> \[FormalLambda]0;
 		QRight =
-				qMatrix[len, lenRight] /. \[FormalCapitalA][i_, j_] :>
+				qMatrix[lenAR, lenRight] /. \[FormalCapitalA][i_, j_] :>
 						ARightMatrix[[i, j]] /. \[FormalLambda] -> \[FormalLambda]0;
 
 		(*Solve for integrating from the left and right*)
@@ -564,11 +559,10 @@ Evans[\[FormalLambda]0_?
 		(* Now we need to account for the jump conditions at the interface, so instead of the normal determinant it needs
 		   modifying by multiplication by the matrices F and G. *)
 
-		det = Total@Table[\[FormalPhi]\[FormalPhi]L[i][x]
-					\[FormalPhi]\[FormalPhi]R[Complement[Range[len], i]][x] (-1)^(Total[Range[lenLeft] + i]), {i, subsetsLeft}];
+		det = Total@Table[\[FormalPhi]\[FormalPhi]L[i][x] \[FormalPhi]\[FormalPhi]R[Complement[Range[Length@FMatrix],i]][x] (-1)^(Total[Range[lenLeft]+i]),{i,Subsets[Range[Length@FMatrix],{lenLeft}]}];
 
 		dettt =
-				det /.rulesFG[len]/.reprules2 /.Thread[subsetsLeft -> Range[Length[subsetsLeft]]]
+				det /.rulesF[lenAL]/.rulesG[lenAR]/.reprules2 /.Thread[subsetsLeft -> Range[Length[subsetsLeft]]]
 						/.Thread[subsetsRight -> Range[Length[subsetsRight]]];
 		
 		Exp[-Integrate[
