@@ -3,13 +3,13 @@
 (* Mathematica Package  *)
 
 (* :Title: CompoundMatrixMethod *)
-(* :Author: Simon Pearce <simon.pearce@manchester.ac.uk> *)
+(* :Author: Simon Pearce <simon.pearce@cruk.manchester.ac.uk> *)
 (* :Context: CompoundMatrixMethod` *)
-(* :Version: 0.91 *)
-(* :Date: 2022-02-09 *)
+(* :Version: 0.92 *)
+(* :Date: 2022-01-15 *)
 
 (* :Mathematica Version: 10+ *)
-(* :Copyright: (c) 2017-22 Simon Pearce *)
+(* :Copyright: (c) 2017-23 Simon Pearce *)
 
 BeginPackage["CompoundMatrixMethod`"];
 
@@ -389,7 +389,7 @@ ToMatrixSystem[eqns_?ListQ, BCs_?ListQ, {depvarLeft_, depvarRight_}, {x_, xa_, x
 			FMatrix = ExtractInterface[interfaceBCs, depvarLeft, {x, xmatch}];
 			GMatrix = ExtractInterface[interfaceBCs, depvarRight, {x, xmatch}];
 			{leftAMatrix, leftBCMatrix, stuff, xLeft} =		  ToMatrixSystem[leftEqns, leftBCs, depvarLeft, {x, xa, xmatch}, a];
-			{rightAMatrix, stuff, rightBCMatrix, xRight} = 	ToMatrixSystem[rightEqns, rightBCs,	depvarRight, {x, xmatch, xb}, a];
+			{rightAMatrix, stuff, rightBCMatrix, xRight} = 	ToMatrixSystem[rightEqns, rightBCs, depvarRight, {x, xmatch, xb}, a];
 			(*Return the system for using in CMM function*)
 			{{leftAMatrix, rightAMatrix}, leftBCMatrix,rightBCMatrix, {FMatrix,	GMatrix}, {x, xa, xmatch, xb}} /. a -> \[FormalLambda]
 
@@ -418,7 +418,7 @@ ExtractInterface[eqn_, depvars_, {x_,xmatch_}] :=
 			(*Replace all the original variables with a set indexed by Y*)
 			newYs = Through[Array[\[FormalY], {Length[originalYVariables]}][x]];
 			newYSubs = Thread[originalYVariables -> newYs];
-			Transpose[Table[Coefficient[neweqn /. newYSubs /. Equal -> Subtract, i], {i, newYs}]]
+			Transpose[Table[Coefficient[neweqn /. newYSubs /. Equal -> Subtract, i], {i, Join[newYs,undifferentiatedVariables]}]]
 		]
 
 SelectNegativeEigenvectors[mat_?MatrixQ, x_ /; !NumericQ[x]] := Module[{limitMatrix,eigvecs},
@@ -441,6 +441,16 @@ SelectPositiveEigenvectors[mat_?MatrixQ, x_ /; !NumericQ[x]] := Module[{limitMat
 Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ},
 	leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ, {FMatrix_?MatrixQ,	GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{Evans,NDSolve}]] :=
 		Evans[\[FormalLambda]0, {ALeftMatrix,	ARightMatrix}, leftBCMatrix, rightBCMatrix,	{FMatrix,	GMatrix}, {x, xa, xm, xb},opts]
+
+Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,ARightMatrix_?MatrixQ},{}, rightBCMatrix_?MatrixQ, {FMatrix_?MatrixQ,GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+  Evans[\[FormalLambda]0, {ALeftMatrix,ARightMatrix}, N@SelectNegativeEigenvectors[ALeftMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], rightBCMatrix,{FMatrix,GMatrix}, {x, xa, xm, xb},opts]
+
+Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,ARightMatrix_?MatrixQ},leftBCMatrix_?MatrixQ, {}, {FMatrix_?MatrixQ,GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+  Evans[\[FormalLambda]0, {ALeftMatrix,ARightMatrix}, leftBCMatrix, N@SelectNegativeEigenvectors[ARightMatrix /. \[FormalLambda] -> \[FormalLambda]0, x],{FMatrix,GMatrix}, {x, xa, xm, xb},opts]
+
+Evans[\[FormalLambda]0_?NumericQ, {{ALeftMatrix_?MatrixQ,ARightMatrix_?MatrixQ},{}, {}, {FMatrix_?MatrixQ,GMatrix_?MatrixQ}, {x_ /; ! NumericQ[x], xa_, xm_, xb_}},opts:OptionsPattern[{Evans,NDSolve}]] :=
+  Evans[\[FormalLambda]0, {ALeftMatrix,ARightMatrix}, N@SelectNegativeEigenvectors[ALeftMatrix /. \[FormalLambda] -> \[FormalLambda]0, x], N@SelectNegativeEigenvectors[ARightMatrix /. \[FormalLambda] -> \[FormalLambda]0, x],{FMatrix,GMatrix}, {x, xa, xm, xb},opts]
+  
 
 Evans[\[FormalLambda]0_?
 		NumericQ, {ALeftMatrix_?MatrixQ,	ARightMatrix_?MatrixQ}, leftBCMatrix_?MatrixQ, rightBCMatrix_?MatrixQ,
